@@ -39,6 +39,14 @@ ldapsearch -x -H ldap://10.146.158.66 -b "" -s base
 
 This queries the server’s RootDSE for basic directory information; it does not enumerate all domain users.
 
+## 3. Username Enumeration with Kerbrute
+
+I used Kerbrute with `userlist.txt`, a username wordlist provided by TryHackMe, to identify valid usernames in the `spookysec.local` domain.
+
+Kerbrute checks candidate usernames through Kerberos. Finding valid usernames gives me accounts to investigate in the next steps.
+
+> To add: the exact Kerbrute command and the valid usernames returned.
+
 ## What I Learned
 
 An open port helps me choose what to investigate next: port **389** suggested **LDAP**, and the LDAP response revealed the **domain name**.
