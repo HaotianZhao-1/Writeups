@@ -74,6 +74,12 @@ The name `svc-admin` suggests a possible service account, but the name alone doe
 - `userlist.txt`: provide the candidate username wordlist.
 - `-o valid-users.log`: save Kerbrute's log output to a file.
 
+### Troubleshooting: Executable Path
+
+I initially tried `./kerbrute`, but received `zsh: no such file or directory: ./kerbrute`. The `./` prefix refers to the current directory, while my Kerbrute executable was located in `~/go/bin/`.
+
+I resolved this by running `~/go/bin/kerbrute` instead. I did not need to change directories because I supplied the executable's path.
+
 ## What I Learned
 
 An open port helps me choose what to investigate next: port **389** suggested **LDAP**, and the LDAP response revealed the **domain name**.
