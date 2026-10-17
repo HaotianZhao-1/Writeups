@@ -2,11 +2,11 @@
 
 ## 1. Port Scanning
 
-I used Nmap to identify open ports on the lab target. One of the ports I found was **389 (LDAP)**.
+I used Nmap with `-Pn` to identify open ports on the lab target. The `-Pn` option skips host discovery and treats the target as online. One of the ports I found was **389 (LDAP)**.
 
 LDAP is used to query directory information, so I chose to investigate it for details about the target's domain.
 
-> To add: the exact Nmap command and relevant scan output. My original note said `-Np`; I need to check the actual options before including the command here.
+> To add: the complete Nmap command and relevant scan output. The confirmed option is `-Pn`.
 
 ## 2. LDAP Enumeration
 
