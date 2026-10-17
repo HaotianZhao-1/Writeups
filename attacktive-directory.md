@@ -80,6 +80,29 @@ I initially tried `./kerbrute`, but received `zsh: no such file or directory: ./
 
 I resolved this by running `~/go/bin/kerbrute` instead. I did not need to change directories because I supplied the executable's path.
 
+## 4. AS-REP Roasting Check with GetNPUsers
+
+I used Impacket's `GetNPUsers` to check whether any accounts in `userlist.txt` had Kerberos pre-authentication disabled.
+
+For accounts with this setting, the domain controller can return an AS-REP without requiring the account's password. Part of that response can be used for offline password cracking. This technique is called **AS-REP Roasting**.
+
+### Command Used
+
+```bash
+impacket-GetNPUsers -no-pass spookysec.local/ -usersfile userlist.txt -dc-ip 10.146.158.66 -format hashcat -outputfile asrep.txt
+```
+
+- `-no-pass`: do not prompt for a password.
+- `spookysec.local/`: specify the target domain without supplying a username after the slash.
+- `-usersfile userlist.txt`: check the candidate usernames in this file.
+- `-dc-ip 10.146.158.66`: specify the domain controller's IP address.
+- `-format hashcat`: format any collected AS-REP cracking material for Hashcat.
+- `-outputfile asrep.txt`: save any collected AS-REP cracking material to this file.
+
+### Results
+
+> To add: the command output, any accounts found with pre-authentication disabled, and whether AS-REP cracking material was collected.
+
 ## What I Learned
 
 An open port helps me choose what to investigate next: port **389** suggested **LDAP**, and the LDAP response revealed the **domain name**.
