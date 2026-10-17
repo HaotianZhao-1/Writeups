@@ -26,7 +26,18 @@ This gave me the following information:
 
 The domain name is useful for later domain enumeration and authentication-related commands.
 
-> To add: the exact `ldapsearch` command I used.
+### Command Used
+
+```bash
+ldapsearch -x -H ldap://10.146.158.66 -b "" -s base
+```
+
+- `-x`: use simple authentication instead of SASL; with no credentials supplied, this is an anonymous query.
+- `-H`: specify the LDAP server URL.
+- `-b ""`: use an empty search base to query the RootDSE.
+- `-s base`: query only the base entry.
+
+This queries the server’s RootDSE for basic directory information; it does not enumerate all domain users.
 
 ## What I Learned
 
