@@ -45,7 +45,21 @@ I used Kerbrute with `userlist.txt`, a username wordlist provided by TryHackMe, 
 
 Kerbrute checks candidate usernames through Kerberos. Finding valid usernames gives me accounts to investigate in the next steps.
 
-> To add: the exact Kerbrute command and the valid usernames returned.
+### Interesting Results
+
+The results included the following usernames:
+
+```text
+svc-admin@spookysec.local
+Administrator@spookysec.local
+administrator@spookysec.local
+```
+
+`Administrator` and `administrator` normally refer to the same AD account because usernames are case-insensitive.
+
+The name `svc-admin` suggests a possible service account, but the name alone does not confirm its purpose or privileges.
+
+> To add: the exact Kerbrute command.
 
 ## What I Learned
 
