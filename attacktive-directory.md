@@ -51,6 +51,7 @@ The results included the following usernames:
 
 ```text
 svc-admin@spookysec.local
+backup@spookysec.local
 Administrator@spookysec.local
 administrator@spookysec.local
 ```
@@ -58,6 +59,8 @@ administrator@spookysec.local
 `Administrator` and `administrator` normally refer to the same AD account because usernames are case-insensitive.
 
 The name `svc-admin` suggests a possible service account, but the name alone does not confirm its purpose or privileges.
+
+`backup` is also worth investigating because its name suggests a backup-related account. Its group memberships and effective permissions still need to be checked; the name alone does not establish elevated access.
 
 > To add: the exact Kerbrute command.
 
