@@ -120,7 +120,7 @@ $krb5asrep$23$svc-admin@SPOOKYSEC.LOCAL:<checksum>:<encrypted-data>
 
 The checksum and encrypted data are abbreviated here for readability. The command uses `asrep.txt` as the output file for the full value.
 
-This confirms that `svc-admin` has Kerberos pre-authentication disabled. I obtained an AS-REP hash suitable for offline password cracking, not the plaintext password. Cracking has not yet been documented.
+This confirms that `svc-admin` has Kerberos pre-authentication disabled. I obtained an AS-REP hash suitable for offline password cracking, not the plaintext password. The subsequent cracking attempt is documented in Section 6.
 
 
 ## 5. Identifying the Hashcat Mode
@@ -133,7 +133,34 @@ After searching online, I identified the Hashcat mode for the collected AS-REP h
 
 The hash begins with `$krb5asrep$23$`, which matches this hash type. I will use mode `18200` when attempting to crack it with Hashcat.
 
-> To add: the cracking command and its result once attempted.
+The cracking command and result are documented in Section 6.
+
+## 6. Offline Password Cracking with Hashcat
+
+I cracked the AS-REP hash using Hashcat and `paswordlist.txt`, a password wordlist downloaded from TryHackMe. The filename below matches the file I used.
+
+### Command Used
+
+```bash
+hashcat -m 18200 -a 0 asrep.txt paswordlist.txt
+```
+
+- `-m 18200`: select Kerberos 5, etype 23, AS-REP.
+- `-a 0`: use a dictionary attack.
+- `asrep.txt`: read the collected AS-REP hash.
+- `paswordlist.txt`: supply candidate passwords.
+
+### Results
+
+Hashcat successfully recovered the password for `svc-admin`. The password is omitted from this published writeup.
+
+```text
+<AS-REP hash>:[REDACTED]
+```
+
+Hashcat does not modify the input file `asrep.txt` by default; it normally stores recovered results in its potfile. The trailing password in a `<hash>:<password>` result is not part of the original AS-REP hash.
+
+This was an offline dictionary attack against the captured AS-REP material. The recovered password has not yet been validated against a domain service in this writeup.
 
 ## What I Learned
 
