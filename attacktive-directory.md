@@ -62,7 +62,17 @@ The name `svc-admin` suggests a possible service account, but the name alone doe
 
 `backup` is also worth investigating because its name suggests a backup-related account. Its group memberships and effective permissions still need to be checked; the name alone does not establish elevated access.
 
-> To add: the exact Kerbrute command.
+### Command Used
+
+```bash
+~/go/bin/kerbrute userenum -d spookysec.local --dc 10.146.158.66 userlist.txt -o valid-users.log
+```
+
+- `userenum`: enumerate valid usernames.
+- `-d spookysec.local`: specify the target domain.
+- `--dc 10.146.158.66`: specify the domain controller.
+- `userlist.txt`: provide the candidate username wordlist.
+- `-o valid-users.log`: save Kerbrute's log output to a file.
 
 ## What I Learned
 
