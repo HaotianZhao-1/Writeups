@@ -1,12 +1,39 @@
 # Attacktive Directory — TryHackMe
 
+> Lab target IPs can change between sessions. The scan below used `10.145.149.203`; earlier commands in this writeup used `10.146.158.66`. Both refer to the same lab target in different sessions. When repeating the steps, use the IP assigned to the current session.
+
 ## 1. Port Scanning
 
 I used Nmap with `-Pn` to identify open ports on the lab target. The `-Pn` option skips host discovery and treats the target as online. One of the ports I found was **389 (LDAP)**.
 
 LDAP is used to query directory information, so I chose to investigate it for details about the target's domain.
 
-> To add: the complete Nmap command and relevant scan output. The confirmed option is `-Pn`.
+### Scan Results (Later Session)
+
+```text
+Nmap scan report for 10.145.149.203
+Host is up (0.039s latency).
+Not shown: 986 closed tcp ports (reset)
+PORT     STATE SERVICE
+53/tcp   open  domain
+80/tcp   open  http
+88/tcp   open  kerberos-sec
+135/tcp  open  msrpc
+139/tcp  open  netbios-ssn
+389/tcp  open  ldap
+445/tcp  open  microsoft-ds
+464/tcp  open  kpasswd5
+593/tcp  open  http-rpc-epmap
+636/tcp  open  ldapssl
+3268/tcp open  globalcatLDAP
+3269/tcp open  globalcatLDAPssl
+3389/tcp open  ms-wbt-server
+5985/tcp open  wsman
+```
+
+The combination of Kerberos (`88`), LDAP (`389`), SMB (`445`), and Global Catalog (`3268`/`3269`) is consistent with an Active Directory domain controller. These services provide useful starting points for domain enumeration. The service names above are Nmap's port labels, not confirmed software versions.
+
+> To add: the complete Nmap command. The confirmed option from the earlier scan is `-Pn`.
 
 ## 2. LDAP Enumeration
 
