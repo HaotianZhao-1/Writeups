@@ -236,8 +236,34 @@ Unable to connect with SMB1 -- no workgroup available
 
 This error occurred during the subsequent SMB1 workgroup-listing attempt. It does not invalidate the share list already returned and does not mean the earlier password authentication failed.
 
-> To add: the result of attempting to access the `backup` share.
+The successful connection and directory listing are documented in Section 8.
 
+
+## 8. Accessing the backup Share
+
+After listing the shares with `-L`, I connected directly to the `backup` share using the same `svc-admin` account. I removed `-L` and added `/backup` to the server path.
+
+`backup` is the share name, not the account I authenticated as.
+
+### Commands Used
+
+```bash
+smbclient //10.145.187.119/backup -U svc-admin
+```
+
+After entering the password, I received an interactive SMB prompt and listed the share's contents:
+
+```text
+Try "help" to get a list of possible commands.
+smb: \> ls
+  .                                   D        0  Sat Apr  4 12:08:39 2020
+  ..                                  D        0  Sat Apr  4 12:08:39 2020
+  backup_credentials.txt              A       48  Sat Apr  4 12:08:53 2020
+```
+
+### Findings
+
+The successful connection and directory listing confirmed that `svc-admin` could access the share and list its contents. I found `backup_credentials.txt`, a 48-byte file whose name suggests it may contain credentials. Its contents have not yet been inspected in this writeup.
 
 ## What I Learned
 
