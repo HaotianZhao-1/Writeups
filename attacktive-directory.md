@@ -187,7 +187,7 @@ Hashcat successfully recovered the password for `svc-admin`. The password is omi
 
 Hashcat does not modify the input file `asrep.txt` by default; it normally stores recovered results in its potfile. The trailing password in a `<hash>:<password>` result is not part of the original AS-REP hash.
 
-This was an offline dictionary attack against the captured AS-REP material. The recovered password has not yet been validated against a domain service in this writeup.
+This was an offline dictionary attack against the captured AS-REP material. The recovered credentials were subsequently used for SMB share enumeration, documented in Section 7.
 
 ## 7. SMB Share Enumeration with smbclient
 
@@ -205,7 +205,39 @@ smbclient -L //10.145.187.119 -U svc-admin
 
 This command lists shares rather than opening an interactive connection to a specific share. The returned share list can help identify which shares to investigate next.
 
-> To add: the command output and the shares returned. Successful authenticated access still needs to be supported by the output.
+### Results
+
+The server returned the following shares:
+
+```text
+Sharename       Type      Comment
+---------       ----      -------
+ADMIN$          Disk      Remote Admin
+backup          Disk
+C$              Disk      Default share
+IPC$            IPC       Remote IPC
+NETLOGON        Disk      Logon server share
+SYSVOL          Disk      Logon server share
+```
+
+The `backup` share caught my attention because I had previously identified a username named `backup` with Kerbrute. The matching names provide a lead to investigate, but do not prove that the account owns or can access this share.
+
+The share listing succeeded using the supplied credentials. Listing a share does not establish permission to read its contents.
+
+### SMB1 Workgroup Listing Message
+
+After returning the shares, smbclient printed:
+
+```text
+Reconnecting with SMB1 for workgroup listing.
+do_connect: Connection to 10.145.187.119 failed (Error NT_STATUS_RESOURCE_NAME_NOT_FOUND)
+Unable to connect with SMB1 -- no workgroup available
+```
+
+This error occurred during the subsequent SMB1 workgroup-listing attempt. It does not invalidate the share list already returned and does not mean the earlier password authentication failed.
+
+> To add: the result of attempting to access the `backup` share.
+
 
 ## What I Learned
 
