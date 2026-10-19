@@ -275,7 +275,19 @@ The file contained a string that appeared to be Base64-encoded:
 [REDACTED BASE64 STRING — possible credentials]
 ```
 
-Base64 is an encoding, not encryption. The original string is omitted from this published writeup because it may expose credentials. Decoding and interpretation have not yet been documented.
+Base64 is an encoding, not encryption. The original string is omitted from this published writeup because it contains credentials.
+
+### Decoding Results
+
+After decoding the string, I recovered a username and password for the `backup` account:
+
+```text
+backup@spookysec.local:[REDACTED]
+```
+
+This connects the file's contents to the `backup` username previously identified during enumeration. These are recovered credentials; their validity and the account's permissions have not yet been tested in this writeup.
+
+> To add: the exact decoding command or tool used.
 
 > To add: the exact file download command used.
 
