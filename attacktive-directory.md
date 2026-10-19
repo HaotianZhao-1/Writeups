@@ -263,7 +263,21 @@ smb: \> ls
 
 ### Findings
 
-The successful connection and directory listing confirmed that `svc-admin` could access the share and list its contents. I found `backup_credentials.txt`, a 48-byte file whose name suggests it may contain credentials. Its contents have not yet been inspected in this writeup.
+The successful connection and directory listing confirmed that `svc-admin` could access the share and list its contents. I found `backup_credentials.txt`, a 48-byte file whose name suggests it may contain credentials. The subsequent local inspection is documented in Section 9.
+
+## 9. Inspecting backup_credentials.txt Locally
+
+I tried to use `cat` inside the interactive `smbclient` console, but `cat` is not an smbclient command. I downloaded `backup_credentials.txt` to my own machine and viewed it locally instead.
+
+The file contained a string that appeared to be Base64-encoded:
+
+```text
+[REDACTED BASE64 STRING — possible credentials]
+```
+
+Base64 is an encoding, not encryption. The original string is omitted from this published writeup because it may expose credentials. Decoding and interpretation have not yet been documented.
+
+> To add: the exact file download command used.
 
 ## What I Learned
 
