@@ -189,6 +189,24 @@ Hashcat does not modify the input file `asrep.txt` by default; it normally store
 
 This was an offline dictionary attack against the captured AS-REP material. The recovered password has not yet been validated against a domain service in this writeup.
 
+## 7. SMB Share Enumeration with smbclient
+
+I used `smbclient` with the `svc-admin` credentials to list the SMB shares on the lab target. This session used target IP `10.145.187.119`.
+
+### Command Used
+
+```bash
+smbclient -L //10.145.187.119 -U svc-admin
+```
+
+- `-L`: list the shares available on the server.
+- `//10.145.187.119`: specify the target server.
+- `-U svc-admin`: specify the username; smbclient prompts for the password.
+
+This command lists shares rather than opening an interactive connection to a specific share. The returned share list can help identify which shares to investigate next.
+
+> To add: the command output and the shares returned. Successful authenticated access still needs to be supported by the output.
+
 ## What I Learned
 
 An open port helps me choose what to investigate next: port **389** suggested **LDAP**, and the LDAP response revealed the **domain name**.
