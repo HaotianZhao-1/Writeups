@@ -289,7 +289,15 @@ This connects the file's contents to the `backup` username previously identified
 
 > To add: the exact decoding command or tool used.
 
-> To add: the exact file download command used.
+### File Download Command
+
+Inside the interactive `smbclient` console, I downloaded the file to my local machine with:
+
+```text
+smb: \> get backup_credentials.txt
+```
+
+The `get` command copies the remote file to the local working directory unless another local destination is specified.
 
 ## What I Learned
 
