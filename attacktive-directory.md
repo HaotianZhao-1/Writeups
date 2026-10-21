@@ -285,7 +285,7 @@ After decoding the string, I recovered a username and password for the `backup` 
 backup@spookysec.local:[REDACTED]
 ```
 
-This connects the file's contents to the `backup` username previously identified during enumeration. These are recovered credentials; their validity and the account's permissions have not yet been tested in this writeup.
+This connects the file's contents to the `backup` username previously identified during enumeration. The credentials were subsequently used successfully with `secretsdump`, as documented in Section 10. The account's exact permissions have not yet been enumerated.
 
 > To add: the exact decoding command or tool used.
 
@@ -298,6 +298,32 @@ smb: \> get backup_credentials.txt
 ```
 
 The `get` command copies the remote file to the local working directory unless another local destination is specified.
+
+## 10. Extracting Account Hashes with Impacket secretsdump
+
+After recovering the `backup` account credentials, I used Impacket's `secretsdump` against the lab domain controller. This session used target IP `10.145.161.193`.
+
+### Command Used (Password Redacted)
+
+```bash
+impacket-secretsdump 'spookysec.local/backup:<REDACTED_PASSWORD>@10.145.161.193'
+```
+
+The target argument follows the structure `domain/username:password@target`. The password above is a placeholder for the recovered lab password.
+
+### Results
+
+The output included an entry for the Administrator account:
+
+```text
+Administrator:500:<LM_HASH_REDACTED>:<NT_HASH_REDACTED>:::
+```
+
+The fields shown are `username:RID:LM hash:NT hash`. `500` is the Administrator account's relative identifier (RID); the fourth field contains its NT hash, not its plaintext password.
+
+This demonstrated that the recovered `backup` credentials could be used to extract account hash material in this lab. Having credentials alone does not guarantee this capability: the account must also have sufficient permissions. The single output line does not establish which extraction method was used or the exact permissions granted to `backup`.
+
+> To add: relevant non-sensitive output showing the extraction method. No Administrator login or remote shell has been documented yet.
 
 ## What I Learned
 
