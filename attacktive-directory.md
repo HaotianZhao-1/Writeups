@@ -359,11 +359,11 @@ After obtaining the remote PowerShell session, I located the following lab flags
 | --- | --- | --- |
 | `Administrator` | `C:\Users\Administrator\Desktop\root.txt` | Administrator flag |
 | `backup` | `C:\Users\backup\Desktop\PrivEsc.txt` | File named `PrivEsc.txt` |
-| `svc-admin` | `C:\Users\svc-admin\Desktop\` | svc-admin flag; exact filename not yet recorded |
+| `svc-admin` | `C:\Users\svc-admin\Desktop\user.txt.txt` | svc-admin flag |
 
 Flag values are omitted from this writeup. I have not yet documented the contents of `PrivEsc.txt`, so its purpose is not inferred from its name alone.
 
-> To add: the exact filename containing the svc-admin flag and the commands used to read the files.
+> To add: the commands used to read the files.
 
 ## What I Learned
 
