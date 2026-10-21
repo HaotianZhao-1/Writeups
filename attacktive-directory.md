@@ -323,7 +323,33 @@ The fields shown are `username:RID:LM hash:NT hash`. `500` is the Administrator 
 
 This demonstrated that the recovered `backup` credentials could be used to extract account hash material in this lab. Having credentials alone does not guarantee this capability: the account must also have sufficient permissions. The single output line does not establish which extraction method was used or the exact permissions granted to `backup`.
 
-> To add: relevant non-sensitive output showing the extraction method. No Administrator login or remote shell has been documented yet.
+> To add: relevant non-sensitive output showing the extraction method. The subsequent remote shell connection is documented in Section 11.
+
+## 11. Administrator Remote PowerShell Session via Pass-the-Hash
+
+After obtaining the Administrator account's NT hash, I used `evil-winrm-py` to authenticate over WinRM with the hash instead of a plaintext password. This technique is called **Pass-the-Hash**. This lab session used target IP `10.145.143.40`.
+
+### Command Used (Hash Redacted)
+
+```bash
+evil-winrm-py -i 10.145.143.40 -u Administrator -H <REDACTED_NT_HASH>
+```
+
+- `-i`: specify the target IP address.
+- `-u Administrator`: specify the account to authenticate as.
+- `-H`: supply the account's NT hash.
+
+### Results
+
+The connection succeeded and provided an interactive remote PowerShell session. I ran `ls` at the following prompt:
+
+```text
+evil-winrm-py PS C:\Users\Administrator\Documents> ls
+```
+
+This records a successful remote shell connection using the Administrator account's hash. Pass-the-Hash uses the hash for authentication; it does not recover the plaintext password.
+
+> To add: `whoami` output to explicitly verify the session identity, and the directory listing returned by `ls`.
 
 ## What I Learned
 
