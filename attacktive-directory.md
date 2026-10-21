@@ -351,6 +351,20 @@ This records a successful remote shell connection using the Administrator accoun
 
 > To add: `whoami` output to explicitly verify the session identity, and the directory listing returned by `ls`.
 
+## 12. Locating the Lab Flags
+
+After obtaining the remote PowerShell session, I located the following lab flags and files:
+
+| Account | Location | Finding |
+| --- | --- | --- |
+| `Administrator` | `C:\Users\Administrator\Desktop\root.txt` | Administrator flag |
+| `backup` | `C:\Users\backup\Desktop\PrivEsc.txt` | File named `PrivEsc.txt` |
+| `svc-admin` | `C:\Users\svc-admin\Desktop\` | svc-admin flag; exact filename not yet recorded |
+
+Flag values are omitted from this writeup. I have not yet documented the contents of `PrivEsc.txt`, so its purpose is not inferred from its name alone.
+
+> To add: the exact filename containing the svc-admin flag and the commands used to read the files.
+
 ## What I Learned
 
 An open port helps me choose what to investigate next: port **389** suggested **LDAP**, and the LDAP response revealed the **domain name**.
