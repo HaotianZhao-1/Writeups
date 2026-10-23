@@ -14,6 +14,14 @@ I used Nmap with `-Pn` to identify open ports on the lab target. The `-Pn` optio
 
 LDAP is used to query directory information, so I chose to investigate it for details about the target's domain.
 
+### Command Used
+
+```bash
+nmap -Pn <IP_ADDRESS>
+```
+
+Replace `<IP_ADDRESS>` with the target IP assigned to the current lab session. I used `-Pn` to skip host discovery and scan the target as online.
+
 ### Scan Results (Later Session)
 
 ```text
