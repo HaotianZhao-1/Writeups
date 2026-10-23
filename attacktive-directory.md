@@ -451,7 +451,7 @@ smb: \> get backup_credentials.txt
 
 The `get` command copied the remote file to my local working directory. I then inspected it locally and found a Base64-encoded string.
 
-Base64 is an encoding, not encryption: it can be decoded without a secret key. After decoding the string, I recovered credentials for the `backup` account:
+Base64 is an encoding, not encryption: it can be decoded without a secret key. I used the Base64Decode web tool to decode the string and recovered credentials for the `backup` account:
 
 ```text
 backup@spookysec.local:[REDACTED]
