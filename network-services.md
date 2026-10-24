@@ -25,7 +25,7 @@ PORT    STATE SERVICE
 Nmap done: 1 IP address (1 host up) scanned in 1.42 seconds
 ```
 
-The open NetBIOS (`139`) and SMB (`445`) ports pointed to SMB as the service to investigate next, which is documented in Section 2. The service names above are Nmap's port labels, not confirmed software versions.
+I found ports `139` and `445` interesting because they are associated with SMB. That suggested the target might be running an SMB server, such as a Samba implementation, so identifying the SMB service and version became the next step, documented in Section 2. The open ports alone do not confirm Samba or any specific version, and the service names above are Nmap's port labels, not confirmed software versions.
 
 ## 2. Service Enumeration
 
