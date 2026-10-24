@@ -34,6 +34,10 @@ Replace `<IP_ADDRESS>` with the target IP assigned to the current lab session.
 
 [Enumerate each exposed service in turn. Every finding below must be followed directly by the next action it led to.]
 
+### SMB
+
+SMB is a request-response protocol that allows clients and servers to communicate over TCP/IP, typically to share files, printers, and other resources over a network. The client sends a request, and the server responds to it.
+
 ### Command Used
 
 ```bash
