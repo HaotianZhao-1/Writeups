@@ -106,3 +106,33 @@ smbclient //10.144.160.209/profiles -U anonymous -p 445
 - `-p 445`: specify the SMB port.
 
 This connection used the `profiles` share identified in the earlier share listing, rather than assuming access to a different share.
+
+### Listing the profiles Share
+
+After connecting as anonymous, I listed the contents of the `profiles` share:
+
+```text
+smb: \> ls
+  .                                   D        0  Tue Apr 21 04:08:23 2020
+  ..                                  D        0  Tue Apr 21 03:49:56 2020
+  .cache                             DH        0  Tue Apr 21 04:08:23 2020
+  .profile                            H      807  Tue Apr 21 04:08:23 2020
+  .sudo_as_admin_successful           H        0  Tue Apr 21 04:08:23 2020
+  .bash_logout                        H      220  Tue Apr 21 04:08:23 2020
+  .viminfo                            H      947  Tue Apr 21 04:08:23 2020
+  Working From Home Information.txt      N      358  Tue Apr 21 04:08:23 2020
+  .ssh                               DH        0  Tue Apr 21 04:08:23 2020
+  .bashrc                             H     3771  Tue Apr 21 04:08:23 2020
+  .gnupg                             DH        0  Tue Apr 21 04:08:23 2020
+
+                15373236 blocks of size 1024. 7030416 blocks available
+```
+
+I also confirmed the current directory:
+
+```text
+smb: \> pwd
+Current directory is \\10.144.160.209\profiles\
+```
+
+The listing shows a user-like home directory, including hidden files and directories such as `.ssh` and `.gnupg`, and a file named `Working From Home Information.txt`. This listing alone does not record the contents of those files.
