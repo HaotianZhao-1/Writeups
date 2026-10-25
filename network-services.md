@@ -136,3 +136,23 @@ Current directory is \\10.144.160.209\profiles\
 ```
 
 The listing shows a user-like home directory, including hidden files and directories such as `.ssh` and `.gnupg`, and a file named `Working From Home Information.txt`. This listing alone does not record the contents of those files.
+
+### Downloading and Reading Working From Home Information.txt
+
+From the `profiles` share, I downloaded the file `Working From Home Information.txt` to my local machine:
+
+```text
+smb: \> get "working From Home Information.txt"
+```
+
+I then read the downloaded file locally:
+
+```bash
+cat working\ From\ Home\ Information.txt
+```
+
+### Findings
+
+The file was a note from James, Department Manager, to John Cactus. It said that, because of the pandemic, most of POLO inc. had moved to working from home where possible, and that John Cactus's account had been enabled with SSH access to the main server. For problems, it directed the reader to contact the IT department.
+
+This gave a concrete next lead: an employee account, John Cactus, with SSH access to the main server, rather than only an anonymous SMB share listing.
