@@ -91,3 +91,18 @@ Unable to connect with SMB1 -- no workgroup available
 This SMB1 failure occurred during the subsequent workgroup-listing attempt. It does not invalidate the share list already returned.
 
 The `profiles` share stood out because it is described as Users profiles, which may contain user-related data. Investigating that share became the next step of interest.
+
+### Accessing the profiles Share as Anonymous
+
+Using the information from the share listing, I connected to the `profiles` share as an anonymous user, without supplying a password. This step used target IP `10.144.160.209`, which differs from the IP used in earlier enumeration sessions.
+
+### Command Used
+
+```bash
+smbclient //10.144.160.209/profiles -U anonymous -p 445
+```
+
+- `-U anonymous`: specify the anonymous username.
+- `-p 445`: specify the SMB port.
+
+This connection used the `profiles` share identified in the earlier share listing, rather than assuming access to a different share.
