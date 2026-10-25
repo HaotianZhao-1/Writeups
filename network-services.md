@@ -32,3 +32,23 @@ I found ports `139` and `445` interesting because they are associated with SMB. 
 ### SMB
 
 SMB is a request-response protocol that allows clients and servers to communicate over TCP/IP, typically to share files, printers, and other resources over a network. The client sends a request, and the server responds to it.
+
+### Workgroup Enumeration with enum4linux
+
+This step used target IP `10.146.165.216`, which differs from the IP used in the earlier Nmap session. Target IPs can change between lab sessions, so the IP in each command is the one used at the time.
+
+### Command Used
+
+```bash
+enum4linux -a 10.146.165.216
+```
+
+### Results
+
+The enumeration returned the domain/workgroup name:
+
+```text
+WORKGROUP
+```
+
+This gave a workgroup name to use for further SMB enumeration, rather than assuming a domain name.
