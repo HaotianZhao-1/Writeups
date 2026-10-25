@@ -65,3 +65,29 @@ server type     :       0x809a03
 ```
 
 This confirms the earlier possibility raised by ports `139` and `445`: the SMB service here is Samba, not merely a service suggested by open ports.
+
+### SMB Share Listing
+
+The share listing for `10.146.165.216` returned the following shares:
+
+```text
+Sharename       Type      Comment
+---------       ----      -------
+netlogon        Disk      Network Logon Service
+profiles        Disk      Users profiles
+print$          Disk      Printer Drivers
+IPC$            IPC       IPC Service (POLOSMB server (Samba, Ubuntu))
+```
+
+The listing also included an SMB1 negotiation message:
+
+```text
+smbXcli_negprot_smb1_done: No compatible protocol selected by server.
+Reconnecting with SMB1 for workgroup listing.
+Protocol negotiation to server 10.146.165.216 (for a protocol between LANMAN1 and NT1) failed: NT_STATUS_INVALID_NETWORK_RESPONSE
+Unable to connect with SMB1 -- no workgroup available
+```
+
+This SMB1 failure occurred during the subsequent workgroup-listing attempt. It does not invalidate the share list already returned.
+
+The `profiles` share stood out because it is described as Users profiles, which may contain user-related data. Investigating that share became the next step of interest.
