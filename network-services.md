@@ -33,6 +33,12 @@ I found ports `139` and `445` interesting because they are associated with SMB. 
 
 SMB is a request-response protocol that allows clients and servers to communicate over TCP/IP, typically to share files, printers, and other resources over a network. The client sends a request, and the server responds to it.
 
+### Telnet
+
+Telnet is another client-server communication protocol. Unlike SMB, which is mainly used for sharing files, printers, and other resources over a network, Telnet is mainly used for remote terminal control: a client connects to a server and controls its terminal remotely.
+
+This is protocol background only. No Telnet command or output from this lab is recorded here yet.
+
 ### Workgroup Enumeration with enum4linux
 
 This step used target IP `10.146.165.216`, which differs from the IP used in the earlier Nmap session. Target IPs can change between lab sessions, so the IP in each command is the one used at the time.
