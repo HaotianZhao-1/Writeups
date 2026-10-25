@@ -156,3 +156,35 @@ cat working\ From\ Home\ Information.txt
 The file was a note from James, Department Manager, to John Cactus. It said that, because of the pandemic, most of POLO inc. had moved to working from home where possible, and that John Cactus's account had been enabled with SSH access to the main server. For problems, it directed the reader to contact the IT department.
 
 This gave a concrete next lead: an employee account, John Cactus, with SSH access to the main server, rather than only an anonymous SMB share listing.
+
+## 3. Initial Access via SSH with a Private Key
+
+The SSH lead from `Working From Home Information.txt` pointed to John Cactus's account. Inside the `profiles` share, I entered the `.ssh` directory and listed it:
+
+```text
+smb: \> cd .ssh
+smb: \.ssh\> ls
+  .                                   D        0  Tue Apr 21 04:08:23 2020
+  ..                                  D        0  Tue Apr 21 03:49:56 2020
+  id_rsa                              N     1679  Tue Apr 21 04:08:23 2020
+  id_rsa.pub                          N      396  Tue Apr 21 04:08:23 2020
+  authorized_keys                     N        0  Tue Apr 21 04:08:23 2020
+```
+
+I downloaded the private key file `id_rsa` from that directory to my local machine. The private key content itself is not reproduced here.
+
+I then used that private key as the SSH identity to log in as user `cactus`:
+
+```bash
+ssh -i id_rsa cactus@10.144.160.209
+```
+
+This worked because the private key matched the account's SSH authentication, turning the anonymous SMB access into authenticated SSH access. Note that this was a private key, not a password hash.
+
+After logging in, I found and read `smb.txt` in the account's home directory:
+
+```bash
+cactus@POLOSMB:~$ cat smb.txt
+```
+
+That file contained the SMB flag. The flag value is intentionally omitted from this write-up.
