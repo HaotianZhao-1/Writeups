@@ -52,3 +52,16 @@ WORKGROUP
 ```
 
 This gave a workgroup name to use for further SMB enumeration, rather than assuming a domain name.
+
+### Machine Identification from srvinfo
+
+Further enumeration for `10.146.165.216` returned OS information from srvinfo. The machine name was `POLOSMB`, and the server was identified as Samba on Ubuntu:
+
+```text
+POLOSMB        Wk Sv PrQ Unx NT SNT POLOSMB server (Samba, Ubuntu)
+platform_id     :       500
+os version      :       6.1
+server type     :       0x809a03
+```
+
+This confirms the earlier possibility raised by ports `139` and `445`: the SMB service here is Samba, not merely a service suggested by open ports.
