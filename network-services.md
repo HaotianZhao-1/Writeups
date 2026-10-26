@@ -27,6 +27,10 @@ Nmap done: 1 IP address (1 host up) scanned in 1.42 seconds
 
 I found ports `139` and `445` interesting because they are associated with SMB. That suggested the target might be running an SMB server, such as a Samba implementation, so identifying the SMB service and version became the next step, documented in Section 2. The open ports alone do not confirm Samba or any specific version, and the service names above are Nmap's port labels, not confirmed software versions.
 
+### Note on Non-Standard Ports
+
+A scan that does not cover the full port range will not show services running on non-standard ports. Services can run on ports other than their usual ones, so a port that is not scanned can hide a service entirely. This is a reason to scan fully rather than relying only on a default port list.
+
 ## 2. Service Enumeration
 
 ### SMB
