@@ -1,5 +1,7 @@
 # Network Services — TryHackMe
 
+Note: All target IP addresses in this write-up are shown as `<IP_ADDRESS>`, because the lab target IP changes between sessions.
+
 ## 1. Port Scanning
 
 I used Nmap with `-Pn` to identify open ports on the lab target. The `-Pn` option skips host discovery and treats the target as online.
@@ -7,14 +9,14 @@ I used Nmap with `-Pn` to identify open ports on the lab target. The `-Pn` optio
 ### Command Used
 
 ```bash
-nmap -Pn 10.144.162.168
+nmap -Pn <IP_ADDRESS>
 ```
 
 ### Scan Results
 
 ```text
 Starting Nmap 7.98 ( https://nmap.org ) at 2026-10-24 16:01 -0700
-Nmap scan report for 10.144.162.168
+Nmap scan report for <IP_ADDRESS>
 Host is up (0.040s latency).
 Not shown: 997 closed tcp ports (reset)
 PORT    STATE SERVICE
@@ -45,12 +47,10 @@ The Telnet step from this lab is recorded later in this file, after the full por
 
 ### Workgroup Enumeration with enum4linux
 
-This step used target IP `10.146.165.216`, which differs from the IP used in the earlier Nmap session. Target IPs can change between lab sessions, so the IP in each command is the one used at the time.
-
 ### Command Used
 
 ```bash
-enum4linux -a 10.146.165.216
+enum4linux -a <IP_ADDRESS>
 ```
 
 ### Results
@@ -65,7 +65,7 @@ This gave a workgroup name to use for further SMB enumeration, rather than assum
 
 ### Machine Identification from srvinfo
 
-Further enumeration for `10.146.165.216` returned OS information from srvinfo. The machine name was `POLOSMB`, and the server was identified as Samba on Ubuntu:
+Further enumeration for `<IP_ADDRESS>` returned OS information from srvinfo. The machine name was `POLOSMB`, and the server was identified as Samba on Ubuntu:
 
 ```text
 POLOSMB        Wk Sv PrQ Unx NT SNT POLOSMB server (Samba, Ubuntu)
@@ -78,7 +78,7 @@ This confirms the earlier possibility raised by ports `139` and `445`: the SMB s
 
 ### SMB Share Listing
 
-The share listing for `10.146.165.216` returned the following shares:
+The share listing for `<IP_ADDRESS>` returned the following shares:
 
 ```text
 Sharename       Type      Comment
@@ -94,7 +94,7 @@ The listing also included an SMB1 negotiation message:
 ```text
 smbXcli_negprot_smb1_done: No compatible protocol selected by server.
 Reconnecting with SMB1 for workgroup listing.
-Protocol negotiation to server 10.146.165.216 (for a protocol between LANMAN1 and NT1) failed: NT_STATUS_INVALID_NETWORK_RESPONSE
+Protocol negotiation to server <IP_ADDRESS> (for a protocol between LANMAN1 and NT1) failed: NT_STATUS_INVALID_NETWORK_RESPONSE
 Unable to connect with SMB1 -- no workgroup available
 ```
 
@@ -104,12 +104,12 @@ The `profiles` share stood out because it is described as Users profiles, which 
 
 ### Accessing the profiles Share as Anonymous
 
-Using the information from the share listing, I connected to the `profiles` share as an anonymous user, without supplying a password. This step used target IP `10.144.160.209`, which differs from the IP used in earlier enumeration sessions.
+Using the information from the share listing, I connected to the `profiles` share as an anonymous user, without supplying a password.
 
 ### Command Used
 
 ```bash
-smbclient //10.144.160.209/profiles -U anonymous -p 445
+smbclient //<IP_ADDRESS>/profiles -U anonymous -p 445
 ```
 
 - `-U anonymous`: specify the anonymous username.
@@ -142,7 +142,7 @@ I also confirmed the current directory:
 
 ```text
 smb: \> pwd
-Current directory is \\10.144.160.209\profiles\
+Current directory is \\<IP_ADDRESS>\profiles\
 ```
 
 The listing shows a user-like home directory, including hidden files and directories such as `.ssh` and `.gnupg`, and a file named `Working From Home Information.txt`. This listing alone does not record the contents of those files.
@@ -186,7 +186,7 @@ I downloaded the private key file `id_rsa` from that directory to my local machi
 I then used that private key as the SSH identity to log in as user `cactus`:
 
 ```bash
-ssh -i id_rsa cactus@10.144.160.209
+ssh -i id_rsa cactus@<IP_ADDRESS>
 ```
 
 This worked because the private key matched the account's SSH authentication, turning the anonymous SMB access into authenticated SSH access. Note that this was a private key, not a password hash.
@@ -206,12 +206,12 @@ This step puts the earlier note on non-standard ports into practice: a full scan
 ### Full Port Scan
 
 ```bash
-nmap -p- 10.146.144.67
+nmap -p- <IP_ADDRESS>
 ```
 
 ```text
 Starting Nmap 7.98 ( https://nmap.org ) at 2026-10-25 16:25 -0700
-Nmap scan report for 10.146.144.67
+Nmap scan report for <IP_ADDRESS>
 Host is up (0.035s latency).
 Not shown: 65534 closed tcp ports (reset)
 PORT     STATE SERVICE
@@ -225,14 +225,12 @@ Only one open port was found, `8012/tcp`, and Nmap labeled its service as `unkno
 I then connected to port `8012` with Telnet:
 
 ```bash
-telnet 10.144.190.49 8012
+telnet <IP_ADDRESS> 8012
 ```
 
-Note that the IP in the Telnet command as given differs from the IP in the Nmap command above. Target IPs can change between lab sessions, so each command is recorded with the IP used at the time.
-
 ```text
-Trying 10.144.190.49...
-Connected to 10.144.190.49.
+Trying <IP_ADDRESS>...
+Connected to <IP_ADDRESS>.
 Escape character is '^]'.
 SKIDY'S BACKDOOR. Type .HELP to view commands
 ```
