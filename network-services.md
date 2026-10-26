@@ -41,7 +41,7 @@ SMB is a request-response protocol that allows clients and servers to communicat
 
 Telnet is another client-server communication protocol. Unlike SMB, which is mainly used for sharing files, printers, and other resources over a network, Telnet is mainly used for remote terminal control: a client connects to a server and controls its terminal remotely.
 
-This is protocol background only. No Telnet command or output from this lab is recorded here yet.
+The Telnet step from this lab is recorded later in this file, after the full port scan.
 
 ### Workgroup Enumeration with enum4linux
 
@@ -198,3 +198,43 @@ cactus@POLOSMB:~$ cat smb.txt
 ```
 
 That file contained the SMB flag. The flag value is intentionally omitted from this write-up.
+
+## 4. Full Port Scan and Telnet Backdoor
+
+This step puts the earlier note on non-standard ports into practice: a full scan found a service that a default scan would not necessarily surface.
+
+### Full Port Scan
+
+```bash
+nmap -p- 10.146.144.67
+```
+
+```text
+Starting Nmap 7.98 ( https://nmap.org ) at 2026-10-25 16:25 -0700
+Nmap scan report for 10.146.144.67
+Host is up (0.035s latency).
+Not shown: 65534 closed tcp ports (reset)
+PORT     STATE SERVICE
+8012/tcp open  unknown
+```
+
+Only one open port was found, `8012/tcp`, and Nmap labeled its service as `unknown`. That label does not identify the service; it only means Nmap did not recognize it from the port number, which fits a non-standard port.
+
+### Connecting with Telnet
+
+I then connected to port `8012` with Telnet:
+
+```bash
+telnet 10.144.190.49 8012
+```
+
+Note that the IP in the Telnet command as given differs from the IP in the Nmap command above. Target IPs can change between lab sessions, so each command is recorded with the IP used at the time.
+
+```text
+Trying 10.144.190.49...
+Connected to 10.144.190.49.
+Escape character is '^]'.
+SKIDY'S BACKDOOR. Type .HELP to view commands
+```
+
+The banner identified the service on port `8012` as SKIDY'S BACKDOOR, and pointed to `.HELP` for its commands. Running `.HELP` itself is not recorded here yet.
