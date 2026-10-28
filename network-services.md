@@ -335,3 +335,14 @@ connect to [192.168.128.110] from (UNKNOWN) [<IP_ADDRESS>] 50562
 ```
 
 Listing the directory showed `flag.txt` (alongside `snap`), and reading it with `cat flag.txt` gave the Telnet flag. The flag value is intentionally omitted from this write-up.
+
+## 7. FTP: Active vs Passive
+
+FTP is another protocol where the direction of the data connection matters, and it can be understood by analogy with shell types:
+
+- **Active FTP resembles a reverse shell**: the server initiates the data connection back to the client.
+- **Passive FTP resembles a bind shell**: the client initiates the data connection to the server.
+
+In both cases, the key distinction is who initiates the data connection, not just who starts the session.
+
+This is protocol background only. No FTP command or output from this lab is recorded here yet.
