@@ -345,4 +345,104 @@ FTP is another protocol where the direction of the data connection matters, and 
 
 In both cases, the key distinction is who initiates the data connection, not just who starts the session.
 
-This is protocol background only. No FTP command or output from this lab is recorded here yet.
+The FTP step from this lab is recorded in Section 8.
+
+## 8. FTP Service Enumeration and Anonymous Login
+
+### Service Version Scan
+
+I used Nmap with `-sV` to identify service versions on the target:
+
+```bash
+nmap -sV <IP_ADDRESS>
+```
+
+```text
+Starting Nmap 7.98 ( https://nmap.org ) at 2026-10-27 20:24 -0700
+Nmap scan report for <IP_ADDRESS>
+Host is up (0.038s latency).
+Not shown: 997 closed tcp ports (reset)
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 2.0.8 or later
+22/tcp open  ssh     OpenSSH 8.2p1 Ubuntu 4ubuntu0.13 (Ubuntu Linux; protocol 2.0)
+80/tcp open  http    Apache httpd 2.4.41 ((Ubuntu))
+Service Info: Host: Welcome; OS: Linux; CPE: cpe:/o:linux:linux_kernel
+```
+
+This confirmed the FTP service on its standard port `21/tcp`, running vsftpd 2.0.8 or later, rather than only inferring FTP from an open port.
+
+### Anonymous Login
+
+I then connected to the FTP server as anonymous, with a blank password:
+
+```bash
+ftp <IP_ADDRESS>
+```
+
+```text
+Connected to <IP_ADDRESS>.
+220 Welcome to the administrator FTP service.
+Name: anonymous
+331 Please specify the password.
+Password:
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+```
+
+The login succeeded without a real password, showing anonymous FTP access was allowed.
+
+### Listing the Server
+
+Listing the server contents returned one file:
+
+```text
+ftp> ls
+229 Entering Extended Passive Mode (|||62256|)
+150 Here comes the directory listing.
+-rw-r--r--    1 0        0             353 Apr 24  2020 PUBLIC_NOTICE.txt
+226 Directory send OK.
+```
+
+### Downloading and Reading PUBLIC_NOTICE.txt
+
+I downloaded that file to my local machine:
+
+```text
+ftp> get PUBLIC_NOTICE.txt
+local: PUBLIC_NOTICE.txt remote: PUBLIC_NOTICE.txt
+229 Entering Extended Passive Mode (|||22019|)
+150 Opening BINARY mode data connection for PUBLIC_NOTICE.txt (353 bytes).
+226 Transfer complete.
+353 bytes received in 00:00 (10.51 KiB/s)
+```
+
+Reading it locally showed a message from the system administrators:
+
+```bash
+cat PUBLIC_NOTICE.txt
+```
+
+```text
+===================================
+MESSAGE FROM SYSTEM ADMINISTRATORS
+===================================
+
+Hello,
+
+I hope everyone is aware that the
+FTP server will not be available
+over the weekend- we will be
+carrying out routine system
+maintenance. Backups will be
+made to my account so I reccomend
+encrypting any sensitive data.
+
+Cheers,
+
+Mike
+```
+
+### Finding
+
+The notice was signed by Mike, giving a person's name associated with the FTP service. The notice itself does not contain a flag, but it identifies Mike as a contact or account holder to investigate further.
