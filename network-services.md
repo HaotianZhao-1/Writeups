@@ -446,3 +446,11 @@ Mike
 ### Finding
 
 The notice was signed by Mike, giving a person's name associated with the FTP service. The notice itself does not contain a flag, but it identifies Mike as a contact or account holder to investigate further.
+
+## 9. Security Note: FTP and Telnet Are Unencrypted
+
+Both FTP and Telnet send their commands, channels, and communications unencrypted. That means the traffic is in plaintext, not protected by encryption.
+
+As a result, an attacker in a man-in-the-middle position on the network path could see everything passing over those connections, including commands and transferred data.
+
+This is a general security property of these protocols, not a man-in-the-middle attack performed in this lab.
