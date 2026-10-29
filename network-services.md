@@ -39,12 +39,6 @@ A scan that does not cover the full port range can miss services running on non-
 
 SMB is a request-response protocol that allows clients and servers to communicate over TCP/IP, typically to share files, printers, and other resources over a network. The client sends a request, and the server responds to it.
 
-### Telnet
-
-Telnet is another client-server communication protocol. Unlike SMB, which is mainly used for sharing files, printers, and other resources over a network, Telnet is mainly used for remote terminal control: a client connects to a server and controls its terminal remotely.
-
-The Telnet step from this lab is recorded later in this file, after the full port scan.
-
 ### Workgroup Enumeration with enum4linux
 
 ### Command Used
@@ -161,6 +155,8 @@ I then read the downloaded file locally:
 cat "Working From Home Information.txt"
 ```
 
+*The filename capitalization has been standardized to match the directory listing; the exact original command capitalization should be checked against terminal history if available.*
+
 ### Findings
 
 The file was a note from James, Department Manager, to John Cactus. It said that, because of the pandemic, most of POLO inc. had moved to working from home where possible, and that John Cactus's account had been enabled with SSH access to the main server. For problems, it directed the reader to contact the IT department.
@@ -255,7 +251,7 @@ SKIDY'S BACKDOOR. Type .HELP to view commands
 
 Here, `192.168.128.110` was my listener-side address on `tun0`, while `<IP_ADDRESS>` is the lab target, shown with the unified placeholder used throughout this write-up.
 
-### tcpdump Listener
+### Capturing ICMP with tcpdump
 
 On my machine, I listened for ICMP traffic on `tun0`:
 
