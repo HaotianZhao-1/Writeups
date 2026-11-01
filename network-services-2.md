@@ -74,4 +74,57 @@ drwxr-xr-x  5 tian tian 4096 Jun 22  2025 cappucino
 drwxr-xr-x  4 1001 1002 4096 Jun 22  2025 ubuntu
 ```
 
-The mounted share contained two user-like directories, `cappucino` and `ubuntu`. Their contents are not recorded here yet.
+The mounted share contained two user-like directories, `cappucino` and `ubuntu`. Their hidden contents are recorded in Section 4.
+
+## 4. Hidden Files in the Mounted Home Directories
+
+A normal listing does not show hidden files, so I used `ls -la` inside both mounted home directories to reveal dotfiles and dot-directories.
+
+### cappucino
+
+```text
+total 36
+drwxr-xr-x 5 tian tian 4096 Jun 22  2025 .
+drwxr-xr-x 4 root root 4096 Jun 22  2025 ..
+-rw-r--r-- 1 tian tian  220 Apr  4  2018 .bash_logout
+-rw-r--r-- 1 tian tian 3771 Apr  4  2018 .bashrc
+drwx------ 2 tian tian 4096 Apr 22  2020 .cache
+drwx------ 3 tian tian 4096 Apr 22  2020 .gnupg
+-rw-r--r-- 1 tian tian  807 Apr  4  2018 .profile
+drwx------ 2 tian tian 4096 Apr 22  2020 .ssh
+-rw-r--r-- 1 tian tian    0 Apr 22  2020 .sudo_as_admin_successful
+-rw------- 1 root root  766 Jun 21  2025 .viminfo
+```
+
+### ubuntu
+
+```text
+total 28
+drwxr-xr-x 4 1001 1002 4096 Jun 22  2025 .
+drwxr-xr-x 4 root root 4096 Jun 22  2025 ..
+-rw-r--r-- 1 1001 1002  220 Apr  4  2018 .bash_logout
+-rw-r--r-- 1 1001 1002 3771 Apr  4  2018 .bashrc
+drwx------ 2 1001 1002 4096 Jun 22  2025 .cache
+-rw-r--r-- 1 1001 1002  807 Apr  4  2018 .profile
+drwx------ 2 1001 1002 4096 Jun 22  2025 .ssh
+-rw-r--r-- 1 1001 1002    0 Jun 22  2025 .sudo_as_admin_successful
+```
+
+The `.ssh` directory in `cappucino` stood out as the most interesting place to keep digging, because SSH directories can contain key material.
+
+### Finding id_rsa in cappucino/.ssh
+
+Inside `/tmp/mount/cappucino/.ssh`, I found:
+
+```text
+authorized_keys  id_rsa  id_rsa.pub
+```
+
+I copied `id_rsa` to a local working directory on my own machine and set its permissions to owner read/write only, which SSH requires for a private key:
+
+```bash
+cp id_rsa <local working directory>
+chmod 600 id_rsa
+```
+
+I then viewed the copied file locally and confirmed it was an RSA private key. The private key content itself is intentionally not reproduced in this write-up.
