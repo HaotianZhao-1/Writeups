@@ -263,7 +263,7 @@ With that information, I used the SMTP user enumeration module:
 
 ```text
 use auxiliary/scanner/smtp/smtp_enum
-set USER_FILE <SecLists user list>
+set USER_FILE /usr/share/wordlists/SecLists-master/Usernames/top-usernames-shortlist.txt
 set RHOSTS <IP_ADDRESS>
 run
 ```
