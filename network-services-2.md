@@ -220,3 +220,62 @@ bash-5.0# cat root.txt
 ```
 
 That file contained the NFS flag. The flag value is intentionally omitted from this write-up.
+
+## 6. SMTP Enumeration
+
+### Port Scan for SMTP
+
+I scanned the target with Nmap and found two open ports:
+
+```bash
+nmap <IP_ADDRESS>
+```
+
+```text
+PORT   STATE SERVICE
+22/tcp open  ssh
+25/tcp open  smtp
+```
+
+Port `25/tcp` was the SMTP service to enumerate next.
+
+### SMTP Version Enumeration with Metasploit
+
+In Metasploit, I used the SMTP version scanner:
+
+```text
+use auxiliary/scanner/smtp/smtp_version
+set RHOSTS <IP_ADDRESS>
+run
+```
+
+It returned the mail server banner, identifying the mail name and the mail transfer agent (MTA):
+
+```text
+<IP_ADDRESS>:25 SMTP 220 polosmtp.home ESMTP Postfix (Ubuntu)
+```
+
+This confirmed the SMTP server was Postfix on Ubuntu, hosted at `polosmtp.home`.
+
+### User Enumeration with smtp_enum
+
+With that information, I used the SMTP user enumeration module:
+
+```text
+use auxiliary/scanner/smtp/smtp_enum
+set USER_FILE <SecLists user list>
+set RHOSTS <IP_ADDRESS>
+run
+```
+
+The module used the same banner and found one username:
+
+```text
+[*] <IP_ADDRESS>:25 Banner: 220 polosmtp.home ESMTP Postfix (Ubuntu)
+[+] <IP_ADDRESS>:25 Users found: administrator
+[*] <IP_ADDRESS>:25 Scanned 1 of 1 hosts (100% complete)
+```
+
+### Finding
+
+Enumerating SMTP gave two concrete facts for the next stage: the server is Postfix (Ubuntu) at `polosmtp.home`, and a valid username, `administrator`, exists on that mail service. No password or further access is recorded here yet.
